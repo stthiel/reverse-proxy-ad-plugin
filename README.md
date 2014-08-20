@@ -12,7 +12,7 @@ than the original plugin based on my needs for our environment.
 6. If the entry is a person, also 'displayName' and 'mail' will be used to update the Jenkins user settings on the fly.
 7. The provided domain\user will become the ID of the Jenkins user as is! This is done to prevent multiple folders
    for the same user settings, e.g. \users\domain_user and \users\domain\user.
-   The user settings folder is know \users\domain\user, always.
+   The user settings folder is now \users\domain\user, always.
 
 Limitations:
 
@@ -21,9 +21,10 @@ Limitations:
 2. I don't pretend to enhanced the original plugin, I only changed it to my needs.
 3. Do not use MS-specific lookup in the Global Catalog. First this will break the plugin, second I experienced
    missing group memberships with it.
-4. Groups as such to be used as Jenkins groups are not supported. All read groups are just used to build
-   GrantedAuthorities for a user - with the group name only! However (AD) groups can be used to authorize users,
-   just add the group name (only it) at the appropriate place (e.g. Matrix) in order to authorize members.
+4. Groups as such to be used as Jenkins groups are not supported in the way intended by Jenkins. All read groups are just     used to build GrantedAuthorities for a single user - with the group names only!
+   However, because of the GrantedAuthorities all (AD) groups can be used to authorize users, just add the 
+   group name (only it) at the appropriate place (e.g. Matrix) in order to authorize members.
+
    BE AWARE, currently this could cause an sec issue if you have groups with the same name in different domains.
 
 All other features of the original plugin remain, so have a look for further help there.
