@@ -15,6 +15,7 @@ than the original plugin based on my needs for our environment.
    The user settings folder is know \users\domain\user, always.
 
 Limitations:
+
 1. This is a simple hack to get our users from different domains of a huge forest authorized
    in an acceptable manner and speed.
 2. I don't pretend to enhanced the original plugin, I only changed it to my needs.
