@@ -21,19 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import org.acegisecurity.providers.ProviderManager
-import org.acegisecurity.providers.anonymous.AnonymousAuthenticationProvider
-import org.acegisecurity.providers.rememberme.RememberMeAuthenticationProvider
-
-import org.acegisecurity.providers.ldap.LdapAuthenticationProvider
-import org.acegisecurity.providers.ldap.authenticator.BindAuthenticator2
-import org.acegisecurity.ldap.DefaultInitialDirContextFactory
-import org.acegisecurity.ldap.search.FilterBasedLdapUserSearch
-
-import org.jenkinsci.plugins.reverse_proxy_auth.service.ProxyLDAPAuthoritiesPopulator
 
 import jenkins.model.Jenkins
-import hudson.Util
+import org.acegisecurity.ldap.DefaultInitialDirContextFactory
+import org.acegisecurity.providers.ProviderManager
+import org.acegisecurity.providers.anonymous.AnonymousAuthenticationProvider
+import org.acegisecurity.providers.ldap.LdapAuthenticationProvider
+import org.acegisecurity.providers.ldap.authenticator.BindAuthenticator2
+import org.acegisecurity.providers.rememberme.RememberMeAuthenticationProvider
+import org.jenkinsci.plugins.reverse_proxy_auth.model.FilterBasedLdapSearch
+import org.jenkinsci.plugins.reverse_proxy_auth.service.ProxyLDAPAuthoritiesPopulator
+
 import javax.naming.Context
 
 /*
@@ -43,15 +41,15 @@ import javax.naming.Context
     The 'instance' object refers to the instance of ReverseProxySecurityRealm
 */
 
-initialDirContextFactory(DefaultInitialDirContextFactory, instance.getLDAPURL() ) {
-  if(instance.managerDN != null) {
-    managerDn = instance.managerDN;
-    managerPassword = instance.getManagerPassword();
-  }
-  extraEnvVars = [(Context.REFERRAL):"follow"];
+initialDirContextFactory(DefaultInitialDirContextFactory, instance.getLDAPURL()) {
+    if (instance.managerDN != null) {
+        managerDn = instance.managerDN;
+        managerPassword = instance.getManagerPassword();
+    }
+    extraEnvVars = [(Context.REFERRAL): "follow"];
 }
 
-ldapUserSearch(FilterBasedLdapUserSearch, instance.userSearchBase, instance.userSearch, initialDirContextFactory) {
+ldapUserSearch(FilterBasedLdapSearch, instance.userSearchBase, instance.userSearch, initialDirContextFactory) {
     searchSubtree = true
 }
 
@@ -68,18 +66,18 @@ authoritiesPopulator(ProxyLDAPAuthoritiesPopulator, initialDirContextFactory, in
 
 authenticationManager(ProviderManager) {
     providers = [
-        // talk to Reverse Proxy Authentication + Authorisation via LDAP
-        bean(LdapAuthenticationProvider,bindAuthenticator,authoritiesPopulator),
-    
-        // these providers apply everywhere
-        bean(RememberMeAuthenticationProvider) {
-            key = Jenkins.getInstance().getSecretKey();
-        },
-        // this doesn't mean we allow anonymous access.
-        // we just authenticate anonymous users as such,
-        // so that later authorisation can reject them if so configured
-        bean(AnonymousAuthenticationProvider) {
-            key = "anonymous"
-        }
+            // talk to Reverse Proxy Authentication + Authorisation via LDAP
+            bean(LdapAuthenticationProvider, bindAuthenticator, authoritiesPopulator),
+
+            // these providers apply everywhere
+            bean(RememberMeAuthenticationProvider) {
+                key = Jenkins.getInstance().getSecretKey();
+            },
+            // this doesn't mean we allow anonymous access.
+            // we just authenticate anonymous users as such,
+            // so that later authorisation can reject them if so configured
+            bean(AnonymousAuthenticationProvider) {
+                key = "anonymous"
+            }
     ]
 }

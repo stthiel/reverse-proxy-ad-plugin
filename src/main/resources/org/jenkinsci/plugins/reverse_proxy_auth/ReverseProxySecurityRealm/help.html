@@ -1,6 +1,16 @@
 <div>
     This setup assumes that you have a front-end reverse proxy that performs authentication,
-    which sets the authenticated user name as an HTTP header and pass it on to Jenkins.
+    which sets the authenticated user domain (!) name as an HTTP header and pass it on to Jenkins.
+
+    The name is expected as 'domain\user' in order to perform an update of the LDAP search base with the
+    domain name.
+    The search will look up for
+    The rootDN of your forest should be used as this rootDN. Please do not use Global Catalog for the search -
+    it will most likely fail.
+    It is recommended to use 'sAMAccountName={0}' for the search.
+    The search will look up 'sAMAccountName=user' in DC=domain,&lt;your rootDN&gt; and will retrieve the group
+    authorities by reading the attribute 'memberOf'. In case a person is found, also 'displayName' and 'mail' are
+    populated to the jenkins user.
 
     <p>
     According to <a href="http://www.ruby-forum.com/topic/83067">this thread</a> and

@@ -21,18 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+import jenkins.model.Jenkins
 import org.acegisecurity.providers.ProviderManager
 import org.acegisecurity.providers.anonymous.AnonymousAuthenticationProvider
 import org.acegisecurity.providers.rememberme.RememberMeAuthenticationProvider
-
-import org.jenkinsci.plugins.reverse_proxy_auth.auth.ReverseProxyAuthenticationProvider
 import org.jenkinsci.plugins.reverse_proxy_auth.auth.DefaultReverseProxyAuthenticator
+import org.jenkinsci.plugins.reverse_proxy_auth.auth.ReverseProxyAuthenticationProvider
 import org.jenkinsci.plugins.reverse_proxy_auth.auth.ReverseProxyAuthoritiesPopulatorImpl
-
-import jenkins.model.Jenkins
-import hudson.Util
-import javax.naming.Context
-
 /*
     Configure Reverse Proxy as the authentication realm.
 

@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.acegisecurity.GrantedAuthority;
-import org.acegisecurity.GrantedAuthorityImpl;
 import org.acegisecurity.ldap.InitialDirContextFactory;
 import org.acegisecurity.providers.ldap.LdapAuthoritiesPopulator;
 import org.acegisecurity.providers.ldap.populator.DefaultLdapAuthoritiesPopulator;
@@ -47,29 +46,13 @@ public class ProxyLDAPAuthoritiesPopulator extends DefaultLdapAuthoritiesPopulat
 	}
 
 	/**
-	 * Retrieves the group membership in two ways.
-	 *
-	 * We'd like to retain the original name, but we historically used to do "ROLE_GROUPNAME".
-	 * So to remain backward compatible, we make the super class pass the unmodified "groupName",
-	 * then do the backward compatible translation here, so that the user gets both "ROLE_GROUPNAME" and "groupName".
+     * Lookup the userDn retrieved from Global catalog inside the real domain and collect roles
+     * from attribute 'memberOf'
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
 	public Set getGroupMembershipRoles(String userDn, String username) {
-		Set<GrantedAuthority> names = super.getGroupMembershipRoles(userDn,username);
 
-		Set<GrantedAuthority> r = new HashSet<GrantedAuthority>(names.size()*2);
-		r.addAll(names);
-
-		for (GrantedAuthority ga : names) {
-			String role = ga.getAuthority();
-
-			// backward compatible name mangling
-			if (convertToUpperCase)
-				role = role.toUpperCase();
-			r.add(new GrantedAuthorityImpl(rolePrefix + role));
-		}
-
-		return r;
+        Set<GrantedAuthority> names = new HashSet<GrantedAuthority>();
+        return names;
 	}
 }
