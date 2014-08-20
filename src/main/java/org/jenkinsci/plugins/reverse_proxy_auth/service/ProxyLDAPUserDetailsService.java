@@ -30,7 +30,6 @@ import java.util.regex.Pattern;
 public class ProxyLDAPUserDetailsService implements UserDetailsService {
 
     private static final Logger LOGGER = Logger.getLogger(ProxyLDAPUserDetailsService.class.getName());
-    public static final String BACKSLASH = "\\\\";
     public static final String DC = "DC=";
     public static final String MEMBER_OF = "memberOf";
     public static final String OBJECT_CATEGORY = "objectCategory";
@@ -58,7 +57,7 @@ public class ProxyLDAPUserDetailsService implements UserDetailsService {
     @Override
     public LdapUserDetails loadUserByUsername(String userName) throws UsernameNotFoundException, DataAccessException {
         try {
-            String[] strings = userName.split(BACKSLASH);
+            String[] strings = userName.split("-");
             LdapUserDetails ldapUser = null;
             if (strings.length == 2) {
                 ldapSearch.setSearchBase(DC + strings[0]);
@@ -100,10 +99,12 @@ public class ProxyLDAPUserDetailsService implements UserDetailsService {
                     // if a person is found, we want to save display name and mail address as well
                     User hudsonUser = User.get(userName);
                     if (hudsonUser.getFullName() == null || hudsonUser.getFullName().isEmpty() || hudsonUser.getFullName().equalsIgnoreCase(userName)) {
-                        hudsonUser.setFullName(v.get(DISPLAY_NAME).get().toString());
+                        if (v.get(DISPLAY_NAME).get() != null)
+                            hudsonUser.setFullName(v.get(DISPLAY_NAME).get().toString());
                     }
                     if ((hudsonUser.getProperty(Mailer.UserProperty.class) == null) || (hudsonUser.getProperty(Mailer.UserProperty.class).getAddress() == null)) {
-                        hudsonUser.addProperty(new Mailer.UserProperty(v.get(MAIL).get().toString()));
+                        if(v.get(MAIL) != null && v.get(MAIL).get() != null)
+                            hudsonUser.addProperty(new Mailer.UserProperty(v.get(MAIL).get().toString()));
                     }
                 }
             }

@@ -23,56 +23,18 @@
  */
 package org.jenkinsci.plugins.reverse_proxy_auth;
 
-import static hudson.Util.fixEmpty;
-import static hudson.Util.fixEmptyAndTrim;
-import static hudson.Util.fixNull;
 import groovy.lang.Binding;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.security.GroupDetails;
-import hudson.security.UserMayOrMayNotExistException;
 import hudson.security.LDAPSecurityRealm;
 import hudson.security.SecurityRealm;
+import hudson.security.UserMayOrMayNotExistException;
 import hudson.util.FormValidation;
 import hudson.util.Scrambler;
 import hudson.util.spring.BeanBuilder;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.naming.Context;
-import javax.naming.NamingException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.DirContext;
-import javax.naming.directory.InitialDirContext;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-
 import jenkins.model.Jenkins;
-
 import org.acegisecurity.Authentication;
 import org.acegisecurity.AuthenticationManager;
 import org.acegisecurity.GrantedAuthority;
@@ -100,6 +62,29 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.web.context.WebApplicationContext;
+
+import javax.naming.Context;
+import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static hudson.Util.*;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -403,66 +388,67 @@ public class ReverseProxySecurityRealm extends SecurityRealm {
 
 				Authentication auth = Hudson.ANONYMOUS;
 				if (userFromHeader != null) {
-					//LOGGER.log(Level.INFO, "USER LOGGED IN: {0}", userFromHeader);
-					if (getLDAPURL() != null) {
+                    userFromHeader = userFromHeader.replaceAll("\\\\", "-");
+                    //LOGGER.log(Level.INFO, "USER LOGGED IN: {0}", userFromHeader);
+                    if (getLDAPURL() != null) {
 
-						GrantedAuthority []  storedGrants = authContext.get(userFromHeader);
-						if (storedGrants != null && storedGrants.length > 1) {
-							authorities = retrieveAuthoritiesIfNecessary(userFromHeader, storedGrants);
-						} else {
-							try {
-								LdapUserDetails userDetails = (LdapUserDetails) loadUserByUsername(userFromHeader);
-								authorities = userDetails.getAuthorities();
+                        GrantedAuthority[] storedGrants = authContext.get(userFromHeader);
+                        if (storedGrants != null && storedGrants.length > 1) {
+                            authorities = retrieveAuthoritiesIfNecessary(userFromHeader, storedGrants);
+                        } else {
+                            try {
+                                LdapUserDetails userDetails = (LdapUserDetails) loadUserByUsername(userFromHeader);
+                                authorities = userDetails.getAuthorities();
 
-								Set<GrantedAuthority> tempLocalAuthorities = new HashSet<GrantedAuthority>(Arrays.asList(authorities));
-								tempLocalAuthorities.add(AUTHENTICATED_AUTHORITY);
-								authorities = tempLocalAuthorities.toArray(new GrantedAuthority[0]);
+                                Set<GrantedAuthority> tempLocalAuthorities = new HashSet<GrantedAuthority>(Arrays.asList(authorities));
+                                tempLocalAuthorities.add(AUTHENTICATED_AUTHORITY);
+                                authorities = tempLocalAuthorities.toArray(new GrantedAuthority[0]);
 
-							} catch (UsernameNotFoundException e) {
-								LOGGER.log(Level.WARNING, "User not found in the LDAP directory: " + e.getMessage());
+                            } catch (UsernameNotFoundException e) {
+                                LOGGER.log(Level.WARNING, "User not found in the LDAP directory: " + e.getMessage());
 
-								Set<GrantedAuthority> tempLocalAuthorities = new HashSet<GrantedAuthority>();
-								tempLocalAuthorities.add(AUTHENTICATED_AUTHORITY);
-								authorities = tempLocalAuthorities.toArray(new GrantedAuthority[0]);
-							}
-						}
+                                Set<GrantedAuthority> tempLocalAuthorities = new HashSet<GrantedAuthority>();
+                                tempLocalAuthorities.add(AUTHENTICATED_AUTHORITY);
+                                authorities = tempLocalAuthorities.toArray(new GrantedAuthority[0]);
+                            }
+                        }
 
-					} else {
-						String groups = r.getHeader(headerGroups);
+                    } else {
+                        String groups = r.getHeader(headerGroups);
 
-						List<GrantedAuthority> localAuthorities = new ArrayList<GrantedAuthority>();
-						localAuthorities.add(AUTHENTICATED_AUTHORITY);
+                        List<GrantedAuthority> localAuthorities = new ArrayList<GrantedAuthority>();
+                        localAuthorities.add(AUTHENTICATED_AUTHORITY);
 
-						if (groups != null) {
-							StringTokenizer tokenizer = new StringTokenizer(groups, headerGroupsDelimiter);
-							while (tokenizer.hasMoreTokens()) {
-								final String token = tokenizer.nextToken().trim();
-								localAuthorities.add(new GrantedAuthorityImpl(token));
-							}
-						}
+                        if (groups != null) {
+                            StringTokenizer tokenizer = new StringTokenizer(groups, headerGroupsDelimiter);
+                            while (tokenizer.hasMoreTokens()) {
+                                final String token = tokenizer.nextToken().trim();
+                                localAuthorities.add(new GrantedAuthorityImpl(token));
+                            }
+                        }
 
-						authorities = localAuthorities.toArray(new GrantedAuthority[0]);
+                        authorities = localAuthorities.toArray(new GrantedAuthority[0]);
 
-						SearchTemplate searchTemplate = new UserSearchTemplate(userFromHeader);
+                        SearchTemplate searchTemplate = new UserSearchTemplate(userFromHeader);
 
-						Set<String> foundAuthorities = proxyTemplate.searchForSingleAttributeValues(searchTemplate, authorities);
-						Set<GrantedAuthority> tempLocalAuthorities = new HashSet<GrantedAuthority>();
+                        Set<String> foundAuthorities = proxyTemplate.searchForSingleAttributeValues(searchTemplate, authorities);
+                        Set<GrantedAuthority> tempLocalAuthorities = new HashSet<GrantedAuthority>();
 
-						String[] authString = foundAuthorities.toArray(new String[0]);
-						for (int i = 0; i < authString.length; i++) {
-							tempLocalAuthorities.add(new GrantedAuthorityImpl(authString[i]));
-						}
+                        String[] authString = foundAuthorities.toArray(new String[0]);
+                        for (int i = 0; i < authString.length; i++) {
+                            tempLocalAuthorities.add(new GrantedAuthorityImpl(authString[i]));
+                        }
 
-						authorities = tempLocalAuthorities.toArray(new GrantedAuthority[0]);
-						authContext.put(userFromHeader, authorities);
+                        authorities = tempLocalAuthorities.toArray(new GrantedAuthority[0]);
+                        authContext.put(userFromHeader, authorities);
 
-						auth = new UsernamePasswordAuthenticationToken(userFromHeader, "", authorities);
-					}
-					authContext.put(userFromHeader, authorities);
-					auth = new UsernamePasswordAuthenticationToken(userFromHeader, "", authorities);
-				}
-				
-				retrievedUser = userFromHeader;
+                        auth = new UsernamePasswordAuthenticationToken(userFromHeader, "", authorities);
+                    }
+                    authContext.put(userFromHeader, authorities);
+                    auth = new UsernamePasswordAuthenticationToken(userFromHeader, "", authorities);
+                }
+
+                retrievedUser = userFromHeader;
 				
 				SecurityContextHolder.getContext().setAuthentication(auth);
 				chain.doFilter(r, response);
