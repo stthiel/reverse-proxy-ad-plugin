@@ -57,7 +57,7 @@ public class ProxyLDAPUserDetailsService implements UserDetailsService {
     @Override
     public LdapUserDetails loadUserByUsername(String userName) throws UsernameNotFoundException, DataAccessException {
         try {
-            String[] strings = userName.split("-");
+            String[] strings = userName.split(";");
             LdapUserDetails ldapUser = null;
             if (strings.length == 2) {
                 ldapSearch.setSearchBase(DC + strings[0]);

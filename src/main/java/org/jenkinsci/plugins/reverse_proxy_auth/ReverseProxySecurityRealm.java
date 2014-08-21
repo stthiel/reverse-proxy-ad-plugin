@@ -388,7 +388,7 @@ public class ReverseProxySecurityRealm extends SecurityRealm {
 
 				Authentication auth = Hudson.ANONYMOUS;
 				if (userFromHeader != null) {
-                    userFromHeader = userFromHeader.replaceAll("\\\\", "-");
+                    userFromHeader = userFromHeader.replaceAll("\\\\", ";");
                     //LOGGER.log(Level.INFO, "USER LOGGED IN: {0}", userFromHeader);
                     if (getLDAPURL() != null) {
 

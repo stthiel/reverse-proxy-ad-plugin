@@ -10,9 +10,9 @@ than the original plugin based on my needs for our environment.
 4. The search filter should be 'sAMAccountName={0}'
 5. If an entry is found, all granted authorities (=groups) will be read from MS-specific attribute 'memberOf'
 6. If the entry is a person, also 'displayName' and 'mail' will be used to update the Jenkins user settings on the fly.
-7. The provided domain\user will become the ID of the Jenkins user as is! This is done to prevent multiple folders
-   for the same user settings, e.g. \users\domain_user and \users\domain\user.
-   The user settings folder is now \users\domain\user, always.
+7. The provided domain\user will become the ID of the Jenkins user as domain;user! This is done to prevent multiple
+   folders for the same user settings, e.g. \users\domain_user and \users\domain\user.
+   The user settings folder is now \users\domain;user, always.
 
 Limitations:
 
@@ -21,7 +21,8 @@ Limitations:
 2. I don't pretend to enhanced the original plugin, I only changed it to my needs.
 3. Do not use MS-specific lookup in the Global Catalog. First this will break the plugin, second I experienced
    missing group memberships with it.
-4. Groups as such to be used as Jenkins groups are not supported in the way intended by Jenkins. All read groups are just     used to build GrantedAuthorities for a single user - with the group names only!
+4. Groups as such to be used as Jenkins groups are not supported in the way intended by Jenkins. All read groups
+   are just used to build GrantedAuthorities for a single user - with the group names only!
    However, because of the GrantedAuthorities all (AD) groups can be used to authorize users, just add the 
    group name (only it) at the appropriate place (e.g. Matrix) in order to authorize members.
 
